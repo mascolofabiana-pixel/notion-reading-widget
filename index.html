@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Reading Counters</title>
+  <style>
+    :root{
+      --card:#446f43;
+      --text:#f7f5ee;
+      --muted:rgba(247,245,238,.82);
+      --divider:rgba(255,255,255,.18);
+      --control-bg:rgba(255,255,255,.14);
+      --control-bg-hover:rgba(255,255,255,.22);
+      --gap:8px;
+      --radius:18px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{margin:0;background:transparent}
+    body{
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding:0;
+    }
+
+    .wrap{
+      width:100%;
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:var(--gap);
+    }
+
+    .counter{
+      position:relative;
+      min-height:178px;
+      aspect-ratio:1/1;
+      overflow:hidden;
+      border-radius:var(--radius);
+      background:var(--card);
+      color:var(--text);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      isolation:isolate;
+      box-shadow:0 1px 0 rgba(0,0,0,.03);
+      user-select:none;
+    }
+
+    .counter::after{
+      content:"";
+      position:absolute;
+      left:0;
+      right:0;
+      top:50%;
+      height:1px;
+      background:var(--divider);
+      z-index:0;
+    }
+
+    .number{
+      position:relative;
+      z-index:1;
+      font-family: Impact, Haettenschweiler, "Arial Narrow Bold", "Arial Narrow", sans-serif;
+      font-size:clamp(58px,12vw,92px);
+      line-height:.9;
+      letter-spacing:-2px;
+      text-align:center;
+      text-shadow:0 1px 0 rgba(0,0,0,.06);
+      transform:translateY(-2px);
+    }
+
+    .label{
+      position:absolute;
+      z-index:2;
+      left:13px;
+      bottom:12px;
+      font-size:11px;
+      line-height:1;
+      font-weight:800;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      color:var(--muted);
+    }
+
+    .label.right{
+      left:auto;
+      right:13px;
+      text-align:right;
+    }
+
+    .controls{
+      position:absolute;
+      z-index:3;
+      top:10px;
+      right:10px;
+      display:flex;
+      gap:6px;
+      opacity:0;
+      transform:translateY(-4px);
+      transition:.16s ease;
+    }
+
+    .counter:hover .controls,
+    .counter:focus-within .controls{
+      opacity:1;
+      transform:translateY(0);
+    }
+
+    button{
+      width:29px;
+      height:29px;
+      border:0;
+      border-radius:9px;
+      background:var(--control-bg);
+      color:var(--text);
+      font:600 18px/1 system-ui,sans-serif;
+      cursor:pointer;
+      backdrop-filter:blur(6px);
+      -webkit-backdrop-filter:blur(6px);
+    }
+
+    button:hover{background:var(--control-bg-hover)}
+    button:active{transform:scale(.94)}
+    button:focus-visible{
+      outline:2px solid rgba(255,255,255,.9);
+      outline-offset:2px;
+    }
+
+    @media (max-width:360px){
+      .counter{min-height:145px}
+      .label{font-size:9px;left:10px;bottom:10px}
+      .label.right{right:10px}
+      .controls{top:8px;right:8px}
+      button{width:27px;height:27px}
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap" aria-label="Reading counters">
+    <section class="counter" data-key="read" aria-label="Libri letti questo mese">
+      <div class="controls">
+        <button class="minus" type="button" aria-label="Diminuisci libri letti">−</button>
+        <button class="plus" type="button" aria-label="Aumenta libri letti">+</button>
+      </div>
+      <div class="number" id="readValue">0</div>
+      <div class="label">Letti</div>
+      <div class="label right">Questo mese</div>
+    </section>
+
+    <section class="counter" data-key="bought" aria-label="Libri comprati questo mese">
+      <div class="controls">
+        <button class="minus" type="button" aria-label="Diminuisci libri comprati">−</button>
+        <button class="plus" type="button" aria-label="Aumenta libri comprati">+</button>
+      </div>
+      <div class="number" id="boughtValue">0</div>
+      <div class="label">Comprati</div>
+      <div class="label right">Questo mese</div>
+    </section>
+  </main>
+
+  <script>
+    const defaults = { read: 0, bought: 0 };
+
+    function loadValue(key){
+      const saved = localStorage.getItem("readingCounter:" + key);
+      const value = saved === null ? defaults[key] : Number(saved);
+      return Number.isFinite(value) ? Math.max(0, value) : defaults[key];
+    }
+
+    function saveValue(key, value){
+      localStorage.setItem("readingCounter:" + key, String(value));
+    }
+
+    document.querySelectorAll(".counter").forEach(card => {
+      const key = card.dataset.key;
+      const display = card.querySelector(".number");
+      let value = loadValue(key);
+
+      const render = () => {
+        display.textContent = value;
+        saveValue(key, value);
+      };
+
+      card.querySelector(".plus").addEventListener("click", () => {
+        value += 1;
+        render();
+      });
+
+      card.querySelector(".minus").addEventListener("click", () => {
+        value = Math.max(0, value - 1);
+        render();
+      });
+
+      render();
+    });
+  </script>
+</body>
+</html>
